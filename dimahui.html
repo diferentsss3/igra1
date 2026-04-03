@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lame Dima Khramov | Horror Survival</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-wrapper {
+            background: #0f0f1a;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,200,0.1);
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 16px;
+            box-shadow: 0 0 0 4px #3a2a1f, 0 10px 30px black;
+            cursor: pointer;
+        }
+
+        button {
+            background: #7a2e2a;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 6px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: monospace;
+            color: #ffdbaa;
+            box-shadow: 0 3px 0 #3a1512;
+            transition: 0.05s linear;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #3a1512;
+        }
+
+        .screamer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            cursor: pointer;
+        }
+        
+        .screamer-content {
+            text-align: center;
+            animation: shake 0.3s infinite;
+        }
+        
+        .screamer-content pre {
+            color: #ff0000;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 10px red;
+            font-family: monospace;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 5px); }
+            75% { transform: translate(5px, -5px); }
+        }
+        
+        /* Start Menu */
+        .start-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.97);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+            font-family: monospace;
+        }
+        
+        .menu-box {
+            background: #1a0a0a;
+            padding: 40px 60px;
+            border-radius: 30px;
+            text-align: center;
+            border: 3px solid #aa4444;
+            box-shadow: 0 0 50px rgba(255,0,0,0.3);
+        }
+        
+        .menu-box pre {
+            color: #cc5533;
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .menu-box h1 {
+            color: #ff6666;
+            margin: 20px 0 10px;
+        }
+        
+        .menu-box input {
+            background: #2a1a1a;
+            border: 2px solid #aa6644;
+            padding: 12px 20px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            color: #ffccaa;
+            text-align: center;
+            border-radius: 30px;
+            margin: 15px 0;
+            width: 250px;
+        }
+        
+        .menu-box input:focus {
+            outline: none;
+            border-color: #ff8866;
+        }
+        
+        .start-btn {
+            background: #aa3333;
+            font-size: 1.5rem;
+            padding: 12px 35px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+        
+        .error-msg {
+            color: #ff8866;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .monster-name-input {
+            margin-top: 15px;
+        }
+        
+        .monster-name-input label {
+            color: #ccaa88;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
+    </div>
+</div>
+
+<!-- Start Menu -->
+<div id="startMenu" class="start-menu">
+    <div class="menu-box">
+        <pre>
+    ------¬ --¬---¬   ---¬ -----¬ 
+    --ã==--¬--¦----¬ ----¦--ã==--¬
+    ------ã---¦--ã----ã--¦-------¦
+    --ã==--¬--¦--¦L--ã---¦--ã==--¦
+    ------ã---¦--¦ L=- --¦--¦  --¦
+    L=====- L=-L=-     L=-L=-  L=-
+        </pre>
+        <h1>LAME DIMA KHRAMOV</h1>
+        <p style="color: #ccaa88;">Enter your nickname (English only):</p>
+        <input type="text" id="nicknameInput" maxlength="16" placeholder="NICKNAME" autocomplete="off">
+        
+        <div class="monster-name-input">
+            <p style="color: #ccaa88; margin-bottom: 5px;">Name the monster chasing you:</p>
+            <input type="text" id="monsterNameInput" maxlength="20" placeholder="e.g., DIMA, SLENDER, BOOGEYMAN" autocomplete="off" value="DIMA KHRAMOV">
+        </div>
+        
+        <div><button id="startGameBtn" class="start-btn">? START GAME</button></div>
+        <div id="errorMsg" class="error-msg"></div>
+        <p style="color: #886666; margin-top: 20px; font-size: 11px;">Collect 10 coins + Food | Survive 3 monsters | Don't starve</p>
+    </div>
+</div>
+
+<!-- Screamer -->
+<div id="screamer" class="screamer">
+    <div class="screamer-content">
+        <pre>
+    ------¬ --¬---¬   ---¬ -----¬ 
+    --ã==--¬--¦----¬ ----¦--ã==--¬
+    ------ã---¦--ã----ã--¦-------¦
+    --ã==--¬--¦--¦L--ã---¦--ã==--¦
+    ------ã---¦--¦ L=- --¦--¦  --¦
+    L=====- L=-L=-     L=-L=-  L=-
+        </pre>
+        <pre style="font-size: 16px; color: #ff4444;" id="screamerText">DIMA KHRAMOV CAUGHT YOU...</pre>
+        <div style="margin-top: 30px;">
+            <button id="closeScreamerBtn" style="background: #aa2222; font-size: 1.3rem; padding: 10px 30px;">BACK TO MENU</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const MAP_WIDTH = 3200;
+        const MAP_HEIGHT = 2000;
+        const CAM_W = 900;
+        const CAM_H = 500;
+        
+        let playerNickname = "HERO";
+        let monsterName = "DIMA KHRAMOV";
+        
+        let player = {
+            x: MAP_WIDTH/2,
+            y: MAP_HEIGHT/2,
+            width: 26,
+            height: 30,
+            speed: 4.8,
+            hp: 100,
+            maxHp: 100,
+            hunger: 100,
+            maxHunger: 100,
+            invincibleFrames: 0,
+            coins: 0
+        };
+        
+        let coins = [];
+        let foodItems = [];
+        
+        // THREE MONSTERS
+        let monsters = [];
+        
+        let ghosts = [];
+        const MAX_GHOSTS = 6;
+        let ghostSpawnTimer = 0;
+        
+        let camera = { x: 0, y: 0 };
+        let gameOver = false;
+        let gameWin = false;
+        let frame = 0;
+        let showScreamer = false;
+        let gameStarted = false;
+        let decorations = [];
+        
+        let hungerDamageTimer = 0;
+        
+        function generateWorld() {
+            coins = [];
+            foodItems = [];
+            decorations = [];
+            
+            // 10 coins
+            for(let i=0; i<10; i++) {
+                let placed = false;
+                let attempts = 0;
+                while(!placed && attempts < 200) {
+                    let randX = 150 + Math.random() * (MAP_WIDTH - 300);
+                    let randY = 100 + Math.random() * (MAP_HEIGHT - 150);
+                    let distToPlayer = Math.hypot(randX - player.x, randY - player.y);
+                    if(distToPlayer > 200 || i<2) {
+                        coins.push({ x: randX, y: randY, width: 14, height: 14, collected: false });
+                        placed = true;
+                    }
+                    attempts++;
+                }
+                if(!placed) {
+                    coins.push({ x: 200 + i*170, y: 300, width: 14, height: 14, collected: false });
+                }
+            }
+            
+            // 15 food items
+            for(let i=0; i<15; i++) {
+                let randX = 100 + Math.random() * (MAP_WIDTH - 200);
+                let randY = 80 + Math.random() * (MAP_HEIGHT - 160);
+                foodItems.push({ x: randX, y: randY, width: 12, height: 12, collected: false, value: 20 });
+            }
+            
+            // decorations
+            for(let i=0; i<250; i++) {
+                let type = Math.floor(Math.random() * 4);
+                let decorX = Math.random() * MAP_WIDTH;
+                let decorY = Math.random() * MAP_HEIGHT;
+                decorations.push({
+                    x: decorX, y: decorY, type: type,
+                    w: type===0?24: type===1?16:14,
+                    h: type===0?34: type===1?12:16
+                });
+            }
+        }
+        
+        function initMonsters() {
+            monsters = [];
+            // 3 monsters at different starting positions
+            monsters.push({
+                x: MAP_WIDTH/2 + 300,
+                y: MAP_HEIGHT/2 + 200,
+                width: 32, height: 34,
+                speed: 1.9, baseSpeed: 1.9
+            });
+            monsters.push({
+                x: MAP_WIDTH/2 - 250,
+                y: MAP_HEIGHT/2 + 350,
+                width: 32, height: 34,
+                speed: 1.7, baseSpeed: 1.7
+            });
+            monsters.push({
+                x: MAP_WIDTH/2 + 100,
+                y: MAP_HEIGHT/2 - 280,
+                width: 32, height: 34,
+                speed: 2.1, baseSpeed: 2.1
+            });
+        }
+        
+        function spawnGhost() {
+            if(ghosts.length >= MAX_GHOSTS) return;
+            let side = Math.floor(Math.random() * 4);
+            let ghostX, ghostY;
+            let margin = 120;
+            if(side === 0) {
+                ghostX = camera.x + Math.random() * CAM_W;
+                ghostY = camera.y - margin;
+            } else if(side === 1) {
+                ghostX = camera.x + Math.random() * CAM_W;
+                ghostY = camera.y + CAM_H + margin;
+            } else if(side === 2) {
+                ghostX = camera.x - margin;
+                ghostY = camera.y + Math.random() * CAM_H;
+            } else {
+                ghostX = camera.x + CAM_W + margin;
+                ghostY = camera.y + Math.random() * CAM_H;
+            }
+            
+            ghostX = Math.min(Math.max(ghostX, 20), MAP_WIDTH - 30);
+            ghostY = Math.min(Math.max(ghostY, 20), MAP_HEIGHT - 30);
+            
+            ghosts.push({
+                x: ghostX, y: ghostY, width: 24, height: 28,
+                speed: 1.1 + Math.random() * 1.3
+            });
+        }
+        
+        function updateGhosts() {
+            for(let i=0; i<ghosts.length; i++) {
+                let g = ghosts[i];
+                let dx = player.x - g.x;
+                let dy = player.y - g.y;
+                let dist = Math.hypot(dx, dy);
+                if(dist > 0.5) {
+                    let moveX = (dx / dist) * g.speed;
+                    let moveY = (dy / dist) * g.speed;
+                    g.x += moveX;
+                    g.y += moveY;
+                }
+                g.x = Math.min(Math.max(g.x, 5), MAP_WIDTH - g.width);
+                g.y = Math.min(Math.max(g.y, 5), MAP_HEIGHT - g.height);
+                
+                if(gameStarted && !gameOver && !gameWin && player.invincibleFrames <= 0) {
+                    if(player.x < g.x+g.width && player.x+player.width > g.x &&
+                       player.y < g.y+g.height && player.y+player.height > g.y) {
+                        player.hp -= 12;
+                        if(player.hp < 0) player.hp = 0;
+                        player.invincibleFrames = 25;
+                        if(player.hp <= 0) {
+                            gameOver = true;
+                            showScreamerNow();
+                        }
+                        let angle = Math.atan2(player.y - g.y, player.x - g.x);
+                        player.x += Math.cos(angle) * 28;
+                        player.y += Math.sin(angle) * 28;
+                        player.x = Math.min(Math.max(player.x, 10), MAP_WIDTH - player.width);
+                        player.y = Math.min(Math.max(player.y, 10), MAP_HEIGHT - player.height);
+                        break;
+                    }
+                }
+            }
+            ghosts = ghosts.filter(g => Math.abs(g.x - player.x) < 1300 && Math.abs(g.y - player.y) < 1000);
+        }
+        
+        function updateMonsters() {
+            if(!gameStarted || gameOver || gameWin) return;
+            
+            for(let i=0; i<monsters.length; i++) {
+                let m = monsters[i];
+                let extraSpeed = player.coins * 0.15;
+                let currentSpeed = m.baseSpeed + extraSpeed;
+                let dx = player.x - m.x;
+                let dy = player.y - m.y;
+                let dist = Math.hypot(dx, dy);
+                if(dist > 0.5) {
+                    let moveX = (dx / dist) * currentSpeed;
+                    let moveY = (dy / dist) * currentSpeed;
+                    m.x += moveX;
+                    m.y += moveY;
+                }
+                m.x = Math.min(Math.max(m.x, 5), MAP_WIDTH - m.width);
+                m.y = Math.min(Math.max(m.y, 5), MAP_HEIGHT - m.height);
+                
+                if(player.invincibleFrames <= 0) {
+                    if(player.x < m.x+m.width && player.x+player.width > m.x &&
+                       player.y < m.y+m.height && player.y+player.height > m.y) {
+                        player.hp -= 15;
+                        if(player.hp < 0) player.hp = 0;
+                        player.invincibleFrames = 30;
+                        if(player.hp <= 0) {
+                            gameOver = true;
+                            showScreamerNow();
+                        }
+                        let angle = Math.atan2(player.y - m.y, player.x - m.x);
+                        player.x += Math.cos(angle) * 32;
+                        player.y += Math.sin(angle) * 32;
+                        player.x = Math.min(Math.max(player.x, 10), MAP_WIDTH - player.width);
+                        player.y = Math.min(Math.max(player.y, 10), MAP_HEIGHT - player.height);
+                        break;
+                    }
+                }
+            }
+            if(player.invincibleFrames > 0) player.invincibleFrames--;
+        }
+        
+        function updateHunger() {
+            if(!gameStarted || gameOver || gameWin) return;
+            
+            if(hungerDamageTimer <= 0) {
+                player.hunger -= 2;
+                if(player.hunger < 0) player.hunger = 0;
+                hungerDamageTimer = 45;
+            } else {
+                hungerDamageTimer--;
+            }
+            
+            if(player.hunger <= 0) {
+                if(hungerDamageTimer % 20 === 0) {
+                    player.hp -= 3;
+                    if(player.hp <= 0) {
+                        gameOver = true;
+                        showScreamerNow();
+                    }
+                }
+            }
+            
+            player.hunger = Math.min(player.maxHunger, Math.max(0, player.hunger));
+            player.hp = Math.min(player.maxHp, Math.max(0, player.hp));
+        }
+        
+        function collectItems() {
+            if(!gameStarted || gameOver || gameWin) return;
+            
+            for(let i=0; i<coins.length; i++) {
+                let c = coins[i];
+                if(!c.collected) {
+                    if(player.x < c.x+c.width && player.x+player.width > c.x &&
+                       player.y < c.y+c.height && player.y+player.height > c.y) {
+                        c.collected = true;
+                        player.coins++;
+                        if(player.coins >= 10) {
+                            gameWin = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            for(let i=0; i<foodItems.length; i++) {
+                let f = foodItems[i];
+                if(!f.collected) {
+                    if(player.x < f.x+f.width && player.x+player.width > f.x &&
+                       player.y < f.y+f.height && player.y+player.height > f.y) {
+                        f.collected = true;
+                        player.hunger = Math.min(player.maxHunger, player.hunger + f.value);
+                        player.hp = Math.min(player.maxHp, player.hp + 5);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        function showScreamerNow() {
+            if(showScreamer) return;
+            showScreamer = true;
+            gameStarted = false;
+            document.getElementById('screamerText').innerHTML = monsterName.toUpperCase() + " CAUGHT YOU...";
+            document.getElementById('screamer').style.display = 'flex';
+        }
+        
+        function hideScreamerAndBackToMenu() {
+            document.getElementById('screamer').style.display = 'none';
+            showScreamer = false;
+            showStartMenu();
+        }
+        
+        function showStartMenu() {
+            gameStarted = false;
+            gameOver = false;
+            gameWin = false;
+            document.getElementById('startMenu').style.display = 'flex';
+            // Focus on nickname input
+            setTimeout(() => {
+                document.getElementById('nicknameInput').focus();
+            }, 100);
+        }
+        
+        function startGame(nickname, mName) {
+            if(!nickname || nickname.trim() === "") {
+                document.getElementById('errorMsg').innerText = "Please enter a nickname!";
+                return false;
+            }
+            if(!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+                document.getElementById('errorMsg').innerText = "Use only English letters, numbers and _";
+                return false;
+            }
+            
+            playerNickname = nickname.substring(0, 16);
+            monsterName = mName || "DIMA KHRAMOV";
+            if(monsterName.trim() === "") monsterName = "THE MONSTER";
+            
+            document.getElementById('startMenu').style.display = 'none';
+            
+            // Reset game state
+            gameOver = false;
+            gameWin = false;
+            gameStarted = true;
+            showScreamer = false;
+            
+            player = {
+                x: MAP_WIDTH/2,
+                y: MAP_HEIGHT/2,
+                width: 26, height: 30,
+                speed: 4.8,
+                hp: 100, maxHp: 100,
+                hunger: 100, maxHunger: 100,
+                invincibleFrames: 0,
+                coins: 0
+            };
+            
+            hungerDamageTimer = 0;
+            ghosts = [];
+            ghostSpawnTimer = 0;
+            frame = 0;
+            
+            generateWorld();
+            initMonsters();
+            
+            return true;
+        }
+        
+        // Fix: Make sure canvas doesn't steal focus from inputs
+        canvas.addEventListener('click', () => {
+            // Just to keep canvas interactive, but don't steal focus
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+        });
+        
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false };
+        
+        window.addEventListener('keydown', (e) => {
+            let k = e.key;
+            // Don't capture keys when typing in inputs
+            if(document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+                return;
+            }
+            if(keys.hasOwnProperty(k)) keys[k] = true;
+            e.preventDefault();
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            let k = e.key;
+            if(keys.hasOwnProperty(k)) keys[k] = false;
+        });
+        
+        function handleInput() {
+            if(!gameStarted || gameOver || gameWin || showScreamer) return;
+            
+            let moveX = 0, moveY = 0;
+            if(keys.ArrowUp || keys.w) moveY -= 1;
+            if(keys.ArrowDown || keys.s) moveY += 1;
+            if(keys.ArrowLeft || keys.a) moveX -= 1;
+            if(keys.ArrowRight || keys.d) moveX += 1;
+            
+            if(moveX !==0 || moveY !==0) {
+                let len = Math.hypot(moveX, moveY);
+                moveX = moveX/len;
+                moveY = moveY/len;
+            }
+            let newX = player.x + moveX * player.speed;
+            let newY = player.y + moveY * player.speed;
+            player.x = Math.min(Math.max(newX, 20), MAP_WIDTH - player.width - 20);
+            player.y = Math.min(Math.max(newY, 20), MAP_HEIGHT - player.height - 20);
+        }
+        
+        function updateCamera() {
+            camera.x = player.x + player.width/2 - CAM_W/2;
+            camera.y = player.y + player.height/2 - CAM_H/2;
+            camera.x = Math.min(Math.max(camera.x, 0), MAP_WIDTH - CAM_W);
+            camera.y = Math.min(Math.max(camera.y, 0), MAP_HEIGHT - CAM_H);
+        }
+        
+        function updateGhostSpawning() {
+            if(!gameStarted || gameOver || gameWin || showScreamer) return;
+            if(ghostSpawnTimer <= 0) {
+                if(ghosts.length < MAX_GHOSTS && Math.random() < 0.4) {
+                    spawnGhost();
+                }
+                ghostSpawnTimer = 100 + Math.random() * 70;
+            } else {
+                ghostSpawnTimer--;
+            }
+        }
+        
+        // Drawing functions
+        function drawBackground() {
+            let grad = ctx.createLinearGradient(0,0,0,CAM_H);
+            grad.addColorStop(0,"#1a2a1f");
+            grad.addColorStop(1,"#2a1f18");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,CAM_W,CAM_H);
+            for(let i=0;i<80;i++) {
+                ctx.fillStyle = "#3f5a3a";
+                ctx.fillRect( (i*73 + frame)%CAM_W, CAM_H-35 + Math.sin(i)*5, 3, 7);
+            }
+        }
+        
+        function drawDecorations() {
+            for(let d of decorations) {
+                let sx = d.x - camera.x;
+                let sy = d.y - camera.y;
+                if(sx + d.w > 0 && sx < CAM_W && sy + d.h >0 && sy < CAM_H) {
+                    if(d.type === 0) {
+                        ctx.fillStyle = "#3c5e3a";
+                        ctx.fillRect(sx+5, sy, 6, d.h);
+                        ctx.fillStyle = "#2c7a3a";
+                        ctx.beginPath();
+                        ctx.ellipse(sx+8, sy-4, 10, 12, 0, 0, Math.PI*2);
+                        ctx.fill();
+                    } else if(d.type === 1) {
+                        ctx.fillStyle = "#5a5a4a";
+                        ctx.fillRect(sx, sy, d.w, d.h);
+                    } else if(d.type === 2) {
+                        ctx.fillStyle = "#3f7245";
+                        ctx.beginPath();
+                        ctx.ellipse(sx+6, sy+4, 8, 7, 0, 0, Math.PI*2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillStyle = "#6b6b6b";
+                        ctx.fillRect(sx+2, sy, 6, d.h);
+                        ctx.fillStyle = "#aa8866";
+                        ctx.fillRect(sx+3, sy+3, 4, 4);
+                    }
+                }
+            }
+        }
+        
+        function drawCoins() {
+            for(let c of coins) {
+                if(c.collected) continue;
+                let sx = c.x - camera.x;
+                let sy = c.y - camera.y;
+                if(sx + 14 >0 && sx < CAM_W && sy+14 >0 && sy<CAM_H) {
+                    ctx.fillStyle = "#ffcc44";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#ffaa33";
+                    ctx.beginPath();
+                    ctx.ellipse(sx+7, sy+7, 7, 7, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#dba522";
+                    ctx.fillRect(sx+4, sy+4, 6, 6);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        function drawFood() {
+            for(let f of foodItems) {
+                if(f.collected) continue;
+                let sx = f.x - camera.x;
+                let sy = f.y - camera.y;
+                if(sx + 12 >0 && sx < CAM_W && sy+12 >0 && sy<CAM_H) {
+                    ctx.fillStyle = "#ff8866";
+                    ctx.beginPath();
+                    ctx.ellipse(sx+6, sy+6, 6, 6, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#44ff44";
+                    ctx.fillRect(sx+3, sy+3, 6, 3);
+                }
+            }
+        }
+        
+        function drawMonsters() {
+            for(let m of monsters) {
+                let sx = m.x - camera.x;
+                let sy = m.y - camera.y;
+                if(sx + m.width >0 && sx < CAM_W) {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = "#cc2200";
+                    ctx.fillStyle = "#3a2c2a";
+                    ctx.fillRect(sx+6, sy+12, 20, 22);
+                    ctx.fillStyle = "#c9aa88";
+                    ctx.beginPath();
+                    ctx.ellipse(sx+16, sy+6, 12, 13, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#aa2222";
+                    ctx.fillRect(sx+9, sy+3, 4, 4);
+                    ctx.fillRect(sx+19, sy+3, 4, 4);
+                    ctx.fillStyle = "#4a1a1a";
+                    ctx.fillRect(sx+13, sy+12, 6, 4);
+                    ctx.fillStyle = "#8b5a3a";
+                    ctx.fillRect(sx+2, sy+18, 5, 20);
+                    ctx.fillRect(sx+24, sy+18, 5, 20);
+                    ctx.fillStyle = "#dd4444";
+                    ctx.fillRect(sx+14, sy+27, 4, 10);
+                    ctx.shadowBlur = 0;
+                    
+                    // Monster name above
+                    ctx.font = "bold 9px monospace";
+                    ctx.fillStyle = "#ff8866";
+                    ctx.shadowBlur = 2;
+                    ctx.fillText(monsterName.substring(0, 12), sx+5, sy-3);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        function drawGhosts() {
+            for(let g of ghosts) {
+                let sx = g.x - camera.x;
+                let sy = g.y - camera.y;
+                if(sx + g.width >0 && sx < CAM_W && sy + g.height >0 && sy < CAM_H) {
+                    ctx.fillStyle = "rgba(180,200,255,0.6)";
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = "#aaccff";
+                    ctx.beginPath();
+                    ctx.ellipse(sx+12, sy+10, 12, 14, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#ffffffcc";
+                    ctx.fillRect(sx+6, sy+4, 5, 5);
+                    ctx.fillRect(sx+17, sy+4, 5, 5);
+                    ctx.fillStyle = "#88aaff";
+                    ctx.fillRect(sx+10, sy+18, 8, 6);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        function drawPlayer() {
+            if(player.invincibleFrames >0 && (Math.floor(Date.now()/60)%3 ===0)) return;
+            let px = player.x - camera.x;
+            let py = player.y - camera.y;
+            
+            ctx.fillStyle = "#6fbc8a";
+            ctx.fillRect(px+5, py+12, 16, 18);
+            ctx.fillStyle = "#ffddbb";
+            ctx.beginPath();
+            ctx.ellipse(px+13, py+6, 10, 10, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#2c2c2c";
+            ctx.fillRect(px+8, py+3, 3, 4);
+            ctx.fillRect(px+17, py+3, 3, 4);
+            
+            // Nickname above player
+            ctx.font = "bold 12px monospace";
+            ctx.fillStyle = "#ffffcc";
+            ctx.shadowBlur = 3;
+            ctx.shadowColor = "#000000";
+            ctx.fillText(playerNickname, px+5, py-3);
+            ctx.shadowBlur = 0;
+        }
+        
+        function drawUI() {
+            // HP Bar (top right corner)
+            let barX = CAM_W - 220;
+            let barY = 15;
+            let barWidth = 200;
+            let barHeight = 18;
+            
+            ctx.fillStyle = "#331111";
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+            let hpPercent = player.hp / player.maxHp;
+            ctx.fillStyle = "#ff3355";
+            ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+            ctx.strokeStyle = "#aa8866";
+            ctx.strokeRect(barX, barY, barWidth, barHeight);
+            ctx.font = "bold 10px monospace";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("HP: " + Math.floor(player.hp) + "/" + player.maxHp, barX + 5, barY + 13);
+            
+            // Hunger Bar (below HP)
+            let hungerY = barY + 22;
+            ctx.fillStyle = "#332211";
+            ctx.fillRect(barX, hungerY, barWidth, barHeight);
+            let hungerPercent = player.hunger / player.maxHunger;
+            ctx.fillStyle = "#ffaa44";
+            ctx.fillRect(barX, hungerY, barWidth * hungerPercent, barHeight);
+            ctx.strokeStyle = "#aa8866";
+            ctx.strokeRect(barX, hungerY, barWidth, barHeight);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("HUNGER: " + Math.floor(player.hunger) + "/" + player.maxHunger, barX + 5, hungerY + 13);
+            
+            // Coins counter
+            ctx.font = "bold 16px monospace";
+            ctx.fillStyle = "#ffcc44";
+            ctx.fillText("?? " + player.coins + "/10", CAM_W - 80, 70);
+            
+            // Win/Lose messages
+            if(gameWin && gameStarted) {
+                ctx.font = "bold 28px monospace";
+                ctx.fillStyle = "#aaff80";
+                ctx.shadowBlur = 0;
+                ctx.fillText("=== VICTORY! YOU ESCAPED! ===", CAM_W/2-190, CAM_H/2);
+            }
+            
+            // Red vignette when monster is close
+            let closestDist = 9999;
+            for(let m of monsters) {
+                let dist = Math.hypot(player.x - m.x, player.y - m.y);
+                closestDist = Math.min(closestDist, dist);
+            }
+            if(closestDist < 150 && !gameWin && !gameOver && gameStarted) {
+                ctx.fillStyle = "rgba(120,20,20,0.3)";
+                ctx.fillRect(0,0,CAM_W,CAM_H);
+            }
+        }
+        
+        function updateGame() {
+            if(!gameStarted || gameOver || gameWin || showScreamer) return;
+            handleInput();
+            updateMonsters();
+            updateGhosts();
+            updateGhostSpawning();
+            collectItems();
+            updateHunger();
+            updateCamera();
+            frame++;
+        }
+        
+        function draw() {
+            drawBackground();
+            drawDecorations();
+            drawCoins();
+            drawFood();
+            drawGhosts();
+            drawPlayer();
+            drawMonsters();
+            drawUI();
+        }
+        
+        function gameLoop() {
+            updateGame();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Menu buttons
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            let nickname = document.getElementById('nicknameInput').value;
+            let mName = document.getElementById('monsterNameInput').value;
+            startGame(nickname, mName);
+        });
+        
+        document.getElementById('nicknameInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                let nickname = document.getElementById('nicknameInput').value;
+                let mName = document.getElementById('monsterNameInput').value;
+                startGame(nickname, mName);
+            }
+        });
+        
+        document.getElementById('monsterNameInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                let nickname = document.getElementById('nicknameInput').value;
+                let mName = document.getElementById('monsterNameInput').value;
+                startGame(nickname, mName);
+            }
+        });
+        
+        document.getElementById('closeScreamerBtn').addEventListener('click', () => {
+            hideScreamerAndBackToMenu();
+        });
+        
+        // Initial menu
+        document.getElementById('startMenu').style.display = 'flex';
+        document.getElementById('nicknameInput').focus();
+        
+        // Start game loop
+        gameLoop();
+    })();
+</script>
+</body>
+</html>
